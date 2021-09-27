@@ -1,8 +1,11 @@
 package com.example.mymeditationui
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.animateColor
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -21,11 +24,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.mymeditationui.ui.theme.*
@@ -83,7 +88,30 @@ fun HomeScreen(){
                 )
             )
             )
+
         }
+        BottomNavigationMenu(modifier = Modifier.align(Alignment.BottomCenter),items = listOf(
+            BottomItem(
+                title = "Home",
+                R.drawable.ic_home
+            ),
+            BottomItem(
+                title = "Meditation",
+                R.drawable.ic_bubble
+            ),
+            BottomItem(
+                title = "Sleep",
+                R.drawable.ic_moon
+            ),
+            BottomItem(
+                title = "Music",
+                R.drawable.ic_music
+            ),
+            BottomItem(
+                title = "Profile",
+                R.drawable.ic_profile
+            )
+        ))
 
     }
 
@@ -162,7 +190,7 @@ fun MusicRunningSection(){
         .background(
             LightRed
         )
-        .padding(vertical = 30.dp)){
+        .padding(vertical = 20.dp)){
 
       Row(modifier = Modifier
           .fillMaxWidth()
@@ -193,20 +221,20 @@ fun MusicRunningSection(){
 @Composable
 fun FeatureSection(feature:List<Feature>){
 
-    Box(modifier = Modifier.fillMaxSize()){
-        Column() {
-            Text(text = "Featured", style = MaterialTheme.typography.h4, color = Color.White,modifier = Modifier.padding(vertical = 10.dp,horizontal = 15.dp))
 
-            LazyVerticalGrid(
-                cells = GridCells.Fixed(2),
-                contentPadding = PaddingValues(start = 7.5.dp,end = 7.5.dp, bottom = 15.dp),
-                modifier = Modifier.fillMaxHeight()) {
-                items(feature.size){
-                    FeatureItem(feature[it])
-                }
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(text = "Featured", style = MaterialTheme.typography.h4, color = Color.White,modifier = Modifier.padding(vertical = 10.dp,horizontal = 15.dp))
+
+        LazyVerticalGrid(
+            cells = GridCells.Fixed(2),
+            contentPadding = PaddingValues(start = 7.5.dp,end = 7.5.dp, bottom = 100.dp),
+            modifier = Modifier.fillMaxHeight()) {
+            items(feature.size){
+                FeatureItem(feature[it])
             }
         }
     }
+
 
 }
 
@@ -215,26 +243,26 @@ fun FeatureItem(feature: Feature){
     BoxWithConstraints(
         modifier = Modifier
             .padding(7.5.dp)
-            .clip(RoundedCornerShape(10.dp))
             .aspectRatio(1f)
+            .clip(RoundedCornerShape(10.dp))
             .background(feature.darkColor)
     ) {
-        val width= constraints.maxWidth
-        val height=constraints.maxHeight
+        val width = constraints.maxWidth
+        val height = constraints.maxHeight
 
-        //Medium color path
+        // Medium colored path
         val mediumColoredPoint1 = Offset(0f, height * 0.3f)
         val mediumColoredPoint2 = Offset(width * 0.1f, height * 0.35f)
         val mediumColoredPoint3 = Offset(width * 0.4f, height * 0.05f)
         val mediumColoredPoint4 = Offset(width * 0.75f, height * 0.7f)
         val mediumColoredPoint5 = Offset(width * 1.4f, -height.toFloat())
 
-        val mediumColoredPath= Path().apply {
-            moveTo(mediumColoredPoint1.x,mediumColoredPoint1.y)
-            standard(mediumColoredPoint1,mediumColoredPoint2)
-            standard(mediumColoredPoint2,mediumColoredPoint3)
-            standard(mediumColoredPoint3,mediumColoredPoint4)
-            standard(mediumColoredPoint4,mediumColoredPoint5)
+        val mediumColoredPath = Path().apply {
+            moveTo(mediumColoredPoint1.x, mediumColoredPoint1.y)
+            standard(mediumColoredPoint1, mediumColoredPoint2)
+            standard(mediumColoredPoint2, mediumColoredPoint3)
+            standard(mediumColoredPoint3, mediumColoredPoint4)
+            standard(mediumColoredPoint4, mediumColoredPoint5)
             lineTo(width.toFloat() + 100f, height.toFloat() + 100f)
             lineTo(-100f, height.toFloat() + 100f)
             close()
@@ -257,20 +285,19 @@ fun FeatureItem(feature: Feature){
             lineTo(-100f, height.toFloat() + 100f)
             close()
         }
-
-        Canvas(modifier = Modifier.fillMaxSize()) {
-
+        Canvas(
+            modifier = Modifier
+                .fillMaxSize()
+        ) {
             drawPath(
                 path = mediumColoredPath,
                 color = feature.mediumColor
             )
-
             drawPath(
                 path = lightColoredPath,
                 color = feature.lightColor
             )
         }
-
         Box(modifier = Modifier
             .fillMaxSize()
             .padding(15.dp)){
@@ -296,7 +323,10 @@ fun FeatureItem(feature: Feature){
                 .clip(
                     RoundedCornerShape(10.dp)
                 )
-                .background(ButtonBlue)){
+                .background(ButtonBlue)
+                .clickable {
+
+                }){
                 Text(text = "start", fontWeight = FontWeight.Bold, color = TextWhite,modifier = Modifier.padding(10.dp))
             }
 
@@ -306,4 +336,95 @@ fun FeatureItem(feature: Feature){
 
 
     }
+}
+
+@Composable
+fun BottomNavigationMenu(
+    modifier: Modifier= Modifier,
+    items:List<BottomItem>,
+    initSelectIndex:Int= 0,
+    activeHighlightColor:Color = ButtonBlue,
+    activeTextColor:Color= Color.White,
+    inactiveTextColor: Color = AquaBlue,
+) {
+
+
+    var selectIndex by remember {
+        mutableStateOf(initSelectIndex)
+    }
+
+
+    Row (
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(10.dp))
+            .background(DeepBlue),
+        horizontalArrangement = Arrangement.SpaceAround,
+        verticalAlignment = Alignment.CenterVertically
+    ){
+        items.forEachIndexed{index, item ->
+            BottomItemContent( bottomItem =item , bottomSelect = selectIndex ==index, sizeStateParameter = if(selectIndex != index){0.dp} else {40.dp}) {
+                selectIndex = index
+                Log.d("ZKMSZ", "ghfdhfgh")
+            }
+        }
+    }
+}
+
+@Composable
+fun BottomItemContent(
+    bottomItem: BottomItem,
+    bottomSelect:Boolean = false,
+    sizeStateParameter:Dp,
+    activeHighlightColor:Color = ButtonBlue,
+    activeTextColor:Color= Color.White,
+    inactiveTextColor: Color = AquaBlue,
+    onItemClick: () -> Unit
+    ) {
+
+    var sizeState = sizeStateParameter
+
+    val size by animateDpAsState(
+        targetValue = sizeState,
+        tween(
+            durationMillis = 500,
+            delayMillis = 0, //the time before starting the animation
+            easing = LinearOutSlowInEasing
+        )
+        )
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center,modifier = Modifier.clickable {
+        onItemClick()
+        if (sizeState == 0.dp){
+            sizeState= 40.dp
+        }
+    }) {
+        Box(modifier = Modifier
+            .padding(10.dp)
+            .clip(RoundedCornerShape(10.dp))
+            ,contentAlignment = Alignment.Center){
+            Box(modifier = Modifier.size(40.dp))
+            Box(modifier = Modifier.size(size).background(
+                if (bottomSelect) {
+                    activeHighlightColor
+                } else {
+                    Color.Transparent
+                }
+            ))
+
+
+            Icon(
+                painter = painterResource(id = bottomItem.iconId),
+                contentDescription = bottomItem.title,
+                tint = if(bottomSelect){activeTextColor} else {inactiveTextColor},
+                modifier = Modifier
+                    .size(20.dp)
+            )
+        }
+
+        Text(text = bottomItem.title, style = MaterialTheme.typography.body1,color = if(bottomSelect){activeTextColor} else {inactiveTextColor} )
+
+
+    }
+
 }
